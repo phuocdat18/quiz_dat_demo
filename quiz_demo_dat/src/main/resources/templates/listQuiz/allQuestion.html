@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <th:block th:replace="layout/header"/>
+</head>
+<body>
+<h1>Hellooooooo</h1>
+<div class="header_address"  id="orderDetailBill">
+    <p hidden="true"><b>ID Đơn hàng:</b> <span id="billId" th:text="${idQuiz}"> </span></p>
+</div>
+
+<div class="tf__invoice_body">
+    <div class="table-responsive">
+        <table class="table table-striped" id="tbBill">
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<th:block th:replace="layout/script"/>
+
+<script>
+    const page = {
+        urls: {
+            getAllQuizs: AppBase.API_QUIZ,
+            getAllQuestions: AppBase.API_QUESTION,
+        },
+        elements: {},
+        commands: {},
+        dialogs: {
+            elements: {},
+            loadData: {},
+            commands: {}
+        },
+    }
+
+    page.elements.tbBill = $('#tbBill tbody')
+
+    page.elements.totalAmountBill = $('#totalAmount-bill')
+    page.elements.tfInvoiceHeader = $('.tf__invoice_header')
+
+    page.dialogs.elements.orderDetail = $('#orderDetail tbody')
+    page.elements.orderDetailBill = $('#orderDetailBill')
+
+    page.dialogs.elements.totalAmount = $('#totalAmount')
+    page.dialogs.elements.vat = $('#vat')
+    page.dialogs.elements.subTotalAmount = $('#subTotalAmount')
+
+    let user = new User();
+    let status = $('#statusOrder').text();
+    let billId = $('#billId').text();
+    console.log(billId);
+
+    const API_QUESTIONS = 'http://localhost:8090/api/question/'
+    let array = ["a", "b", "c", "d"] ;
+    let quizzes = [];
+    let questions;
+    let index = 0;
+
+
+    page.commands.getAllBillDetailsByBillId = () => {
+        $.ajax({
+            type: 'GET',
+            url: page.urls.getAllQuizs +'/'+ billId
+        })
+            .done((data) => {
+                $.each(data, (index, item) => {
+                    const str = page.commands.renderHistoryBill(item);
+                    page.elements.tbBill.prepend(str)
+                })
+
+            })
+            .fail((jqXHR) => {
+                console.log("123123")
+                AppBase.SweetAlert.showErrorAlert(AppBase.AlertMessageVi.ERROR_404);
+            })
+    }
+
+    page.commands.renderHistoryBill = (obj) => {
+        return `
+            <tr id="tr_${obj.id}">
+                    <tr>${obj.content}</tr>
+                </tr>
+        `;
+    }
+
+
+
+
+
+    page.loadData = () => {
+        page.commands.getAllBillDetailsByBillId();
+    }
+
+    page.initializeControlEvent = () => {
+
+    }
+
+    $(() => {
+        page.loadData();
+        page.initializeControlEvent();
+    })
+
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <th:block th:replace="layout/header"/>
+</head>
+<style>
+    .header-container {
+        align-items: center;
+        justify-content: center;
+    }
+
+    .header-title {
+        text-align: center;
+    }
+</style>
+<body>
+<div class="header-container">
+    <h1 class="header-title">Chào mừng đến với cuộc thi Olympic 2023</h1>
+</div>
+<div class="row">
+    <div id="product-carts" class="row product-carts" style= "padding-left: 12px;">
+
+    </div>
+</div>
+
+<link rel="stylesheet" href="/assets/css/style.css">
+<th:block th:replace="layout/script"/>
+<script src="/assets/sweetalert2/sweetalert2.all.min.js"></script>
+
+<script>
+    const page = {
+        urls: {
+            getAllQuizs: AppBase.API_QUIZ,
+            getAllQuestions: AppBase.API_QUESTION,
+        },
+        elements: {},
+        commands: {},
+        dialogs: {
+            elements: {},
+            loadData: {},
+            commands: {}
+        },
+    }
+
+    page.elements.divProducts = $('#div-products');
+    page.elements.productCarts = $('#product-carts')
+    page.elements.inputSearch = $('#search')
+    page.elements.btnSearch = $('.btn-search')
+    page.elements.commonBtn = $('.common_btn')
+    page.elements.dropdownItem = $('.item')
+
+    page.elements.dropdownItem = $('.dropdown-item')
+
+
+    page.dialogs.elements.tbCart = $('#tbCart tbody')
+    page.dialogs.elements.modalCart = $('#mdCart')
+    page.dialogs.elements.totalAmount = $('#totalAmount')
+
+    page.dialogs.elements.btnAddCart = $('.btnAddCart')
+    page.elements.countCart = $('#count-cart')
+
+    page.elements.pagination = $('.pagination')
+
+
+    page.commands.getAllQuizs = () => {
+        $.ajax({
+            type: 'GET',
+            url: page.urls.getAllQuizs,
+        })
+            .done((data) => {
+                console.log(data);
+                page.commands.loadProduct(data);
+            })
+            .fail((jqXHR) => {
+                console.log(jqXHR);
+            });
+    }
+
+
+    page.commands.loadProduct = (quizs) => {
+        page.elements.productCarts.empty();
+        page.elements.divProducts.empty();
+
+        $.each(quizs, (index, item) => {
+            const str = page.commands.renderQuiz(item);
+
+            page.elements.productCarts.prepend(str)
+            page.elements.divProducts.prepend(str)
+        })
+    }
+
+    page.commands.displayPagination = (totalPages, currentPage) => {
+        page.elements.pagination.empty();
+
+        let previousBtn = '<li class="page-item"><a class="page-link" onclick="page.commands.getAllQuizs(' + (currentPage - 1) + ', )"><i class="fas fa-long-arrow-alt-left"></i></a></li>';
+        page.elements.pagination.append(previousBtn);
+
+        for (let i = 1; i <= totalPages; i++) {
+            let pageBtn = '<li class="page-item ' + (i === currentPage ? 'active' : '') + '"><a class="page-link" onclick="page.commands.getAllQuizs(' + i + ', 10)">' + i + '</a></li>';
+            page.elements.pagination.append(pageBtn);
+        }
+
+        let nextBtn = '<li class="page-item"><a class="page-link" href="#" onclick="page.commands.getAllQuizs(' + (currentPage + 1) + ', 10)"><i class="fas fa-long-arrow-alt-right"></i></a></li>';
+        page.elements.pagination.append(nextBtn);
+    };
+
+    page.commands.renderQuiz = (obj) => {
+        return `
+                <a class="title" title="Edit" href="/allquiz/quiz_detail?id=${obj.id}">${obj.content}</a>
+           `;
+    }
+
+
+    page.commands.getQuestionById = (quizId) => {
+        return $.ajax({
+            type: 'GET',
+            url: page.url.getAllQuizs + '/' + quizId
+        });
+    }
+
+
+
+
+
+
+
+    page.loadData = () => {
+        page.commands.getAllQuizs(1,10);
+    }
+
+    page.initializeControlEvent = () => {
+
+        $("#search").on('keydown', (event) => {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                page.commands.search(1,8);
+            }
+        });
+        $('.dropdown-item').on('click', () => {
+            page.commands.search(1,8);
+        });
+
+        $('.common_btn').on('click', () => {
+            page.commands.search(1,8);
+        });
+    }
+
+    $(() => {
+        page.loadData();
+        page.initializeControlEvent();
+    })
+
+
+</script>
+</body>
+</html>
