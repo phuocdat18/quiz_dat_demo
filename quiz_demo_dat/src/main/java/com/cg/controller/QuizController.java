@@ -2,10 +2,7 @@ package com.cg.controller;
 
 
 import com.cg.exception.DataInputException;
-import com.cg.model.Question;
-import com.cg.model.Quiz;
-import com.cg.model.User;
-import com.cg.model.UserQuiz;
+import com.cg.model.*;
 import com.cg.repository.UserQuizRepository;
 import com.cg.service.answer.AnswerService;
 import com.cg.service.question.QuestionService;
@@ -43,35 +40,35 @@ public class QuizController {
         return "listQuiz/list_quiz";
     }
 
+//    @GetMapping("/quiz_detail")
+//    public String showQuizDetail(Model model, @RequestParam("id") long id) {
+//        model.addAttribute("idQuiz", id);
+//        return "listQuiz/allQuestion";
+//    }
+
     @GetMapping("/quiz_detail")
-    public String showQuiz(Model model, @RequestParam long id, Pageable pageable) {
+    public String showQuizDetail(Model model, @RequestParam("id") long id) {
         String username = appUtils.getPrincipalUsername();
+        Long idUser = appUtils.getPrincipalIdUser();
 
         Optional<User> userOptional = userService.findByUsername(username);
-        if (userOptional.isEmpty()) {
+        Optional<User> user = userService.findById(idUser);
+
+        if (!userOptional.isPresent() || !user.isPresent()) {
             throw new DataInputException("User not valid");
         }
 
-        User user = userOptional.get();
+        Role role = userOptional.get().getRole();
+        String roleCode = role.getCode();
 
-        List<Quiz> quiz = quizService.findQuizByIdQuiz(id);
-        if (quiz.isEmpty()) {
-            throw new DataInputException("quiz not found");
-        }
-        model.addAttribute("quizById", quiz.get(0));
-
-//        List<Quiz> quizList = quizService.findQuizDetailByQuizId(id);
-//        model.addAttribute("quizDetail", quizList);
-
-        String roleCode = user.getRole().getCode();
         model.addAttribute("username", username);
-        model.addAttribute("user", user);
+        model.addAttribute("idUser", idUser);
         model.addAttribute("roleCode", roleCode);
         model.addAttribute("idQuiz", id);
-
-
         return "listQuiz/allQuestion";
     }
+
+
 
     @PostMapping("/save-score")
     public ResponseEntity<?> saveScore(@RequestBody UserQuizSaveRequest scoreData) {

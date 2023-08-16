@@ -1,6 +1,7 @@
 package com.cg.service.quiz;
 
 import com.cg.model.Quiz;
+import com.cg.model.User;
 import com.cg.model.UserQuiz;
 import com.cg.repository.QuestionRepository;
 import com.cg.repository.QuizRepository;
@@ -8,15 +9,13 @@ import com.cg.repository.UserQuizRepository;
 import com.cg.service.request.UserQuizSaveRequest;
 import com.cg.utils.AppUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class QuizService implements IQuizService  {
+public class QuizService implements IQuizService {
 
     @Autowired
     private QuizRepository quizRepository;
@@ -33,18 +32,19 @@ public class QuizService implements IQuizService  {
 
     @Override
     public Optional<Quiz> findById(Long id) {
-        return Optional.empty();
+        return quizRepository.findById(id);
     }
 
-    @Override
-    public List<Quiz> findQuizByIdQuiz(Long id) {
-        return quizRepository.findQuizByIdQuiz(id);
-    }
+//    @Override
+//    public List<Quiz> findQuizByIdQuiz(Long id) {
+//        return quizRepository.findQuizByIdQuiz(id);
+//    }
 
     @Override
     public List<Quiz> findQuizDetailByQuizId(Long id) {
         return quizRepository.findQuizDetailByQuizId(id);
     }
+
 
     @Override
     public Quiz save(Quiz quiz) {

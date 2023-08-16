@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Collection;
 import java.util.List;
 
 //@AllArgsConstructor
@@ -26,10 +27,10 @@ public class Quiz {
     @JsonIgnore
     private List<UserQuiz> quizzes;
 
-    public Quiz(Long id, String content, List<Question> questions, List<UserQuiz> quizzes) {
+    public Quiz(Long id, String content, Collection<Question> questions, Collection<UserQuiz> quizzes) {
         this.id = id;
         this.content = content;
-        this.questions = questions;
-        this.quizzes = quizzes;
+        this.questions = (List<Question>) questions;
+        this.quizzes = (List<UserQuiz>) quizzes;
     }
 }

@@ -1,5 +1,6 @@
 package com.cg.utils;
 
+import com.cg.model.UserPrinciple;
 import org.modelmapper.AbstractConverter;
 import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
@@ -44,6 +45,18 @@ public class AppUtils {
 
         return userName;
     }
+
+    public Long getPrincipalIdUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            UserPrinciple userPrinciple = (UserPrinciple) principal;
+            return userPrinciple.getId();
+        }
+
+        return null;
+    }
+
 
     public String replaceNonEnglishChar(String str) {
         str = str.toLowerCase();

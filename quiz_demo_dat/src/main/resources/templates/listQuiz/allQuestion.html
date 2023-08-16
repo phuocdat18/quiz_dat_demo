@@ -7,27 +7,39 @@
 </head>
 <body>
 <h1>Hellooooooo</h1>
-<div class="header_address"  id="orderDetailBill">
-    <p hidden="true"><b>ID Đơn hàng:</b> <span id="billId" th:text="${idQuiz}"> </span></p>
+<div class="header_address" id="orderDetailBill">
+    <p><b>ID Quiz:</b> <span id="idQuiz" th:text="${idQuiz}"></span></p>
+</div>
+<div class="header_address" id="orderUser">
+    <p><b>ID User:</b> <span id="idUser" th:text="${idUser}"></span></p>
 </div>
 
-<div class="tf__invoice_body">
-    <div class="table-responsive">
-        <table class="table table-striped" id="tbBill">
-            <tbody>
+<table >
+    <div class="tf__invoice_body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="tbBill">
+                <tbody>
 
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
+
+    <div class="submit-button-container">
+        <button class="submit-button" onclick="onSubmitButtonClick()">Nộp bài</button>
+    </div>
+</table>
+
 
 <th:block th:replace="layout/script"/>
 
 <script>
+    let x = [];
     const page = {
         urls: {
-            getAllQuizs: AppBase.API_QUIZ,
+            getAllQuiz: AppBase.API_QUIZ,
             getAllQuestions: AppBase.API_QUESTION,
+            getAllUserQuiz: AppBase.API_USER_QUIZ,
         },
         elements: {},
         commands: {},
@@ -39,55 +51,149 @@
     }
 
     page.elements.tbBill = $('#tbBill tbody')
-
     page.elements.totalAmountBill = $('#totalAmount-bill')
     page.elements.tfInvoiceHeader = $('.tf__invoice_header')
-
     page.dialogs.elements.orderDetail = $('#orderDetail tbody')
     page.elements.orderDetailBill = $('#orderDetailBill')
-
     page.dialogs.elements.totalAmount = $('#totalAmount')
     page.dialogs.elements.vat = $('#vat')
     page.dialogs.elements.subTotalAmount = $('#subTotalAmount')
 
     let user = new User();
     let status = $('#statusOrder').text();
-    let billId = $('#billId').text();
-    console.log(billId);
+    let idQuiz = $('#idQuiz').text();
+    console.log(idQuiz);
+    let idUser = $('#idUser').text();
+    console.log(idUser);
 
-    const API_QUESTIONS = 'http://localhost:8090/api/question/'
-    let array = ["a", "b", "c", "d"] ;
+    const API_QUESTIONS = 'http://localhost:8090/api/question'
+    let array = ["a", "b", "c", "d"];
     let quizzes = [];
-    let questions;
     let index = 0;
+    let questions = [];
+    let correctAnswers = [];
 
-
+    // Khởi tạo biến questions
     page.commands.getAllBillDetailsByBillId = () => {
         $.ajax({
             type: 'GET',
-            url: page.urls.getAllQuizs +'/'+ billId
+            url: API_QUESTIONS + '/' + idQuiz
         })
             .done((data) => {
-                $.each(data, (index, item) => {
-                    const str = page.commands.renderHistoryBill(item);
-                    page.elements.tbBill.prepend(str)
-                })
-
+                questions = data.content;
+                // Cập nhật dữ liệu câu hỏi
+                console.log(questions);
+                $.each(questions, (index) => {
+                    const str = page.commands.renderHistoryBill(questions[index]);
+                    page.elements.tbBill.prepend(str);
+                });
             })
             .fail((jqXHR) => {
-                console.log("123123")
+                console.log("123123");
                 AppBase.SweetAlert.showErrorAlert(AppBase.AlertMessageVi.ERROR_404);
-            })
-    }
+            });
+    };
 
     page.commands.renderHistoryBill = (obj) => {
+        let answersHtml = '';
+
+        obj.answers.forEach((answer) => {
+            if (obj.type === 'radio') {
+                answersHtml += `
+        <label>
+          <input type="radio" name="question_${obj.id}" value="${answer.id}" data-correct="${answer.status}" onclick="onAnswerSelect(${obj.id}, ${answer.id})"> ${answer.content}, ${answer.status}
+        </label><br>
+      `;
+                if (answer.status === true) {
+                    // Lưu câu hỏi và đáp án có status là 1 vào mảng correctAnswers
+                    correctAnswers.push({ questionId: obj.id, answerId: answer.id });
+                }
+            } else if (obj.type === 'checkbox') {
+                answersHtml += `
+        <label>
+          <input type="checkbox" name="question_${obj.id}" value="${answer.id}" data-correct="${answer.status}" onclick="onAnswerSelect(${obj.id}, ${answer.id})"> ${answer.content}, ${answer.status}
+        </label><br>
+      `;
+                if (answer.status === true) {
+                    // Lưu câu hỏi và đáp án có status là 1 vào mảng correctAnswers
+                    correctAnswers.push({ questionId: obj.id, answerId: answer.id });
+                }
+            }
+        });
+
         return `
-            <tr id="tr_${obj.id}">
-                    <tr>${obj.content}</tr>
-                </tr>
-        `;
+    <tr id="tr_${obj.id}">
+      <td>
+        <span>${obj.content}</span>
+      </td>
+      <td>
+        ${answersHtml}
+      </td>
+    </tr>
+  `;
+    };
+
+    // Khai báo mảng để lưu câu hỏi và đáp án đã chọn
+    let customerAnswers = [];
+
+    // Event handler khi khách hàng chọn đáp án
+    function onAnswerSelect(questionId, answerId) {
+        // Kiểm tra xem câu hỏi đã tồn tại trong mảng customerAnswers chưa
+        const existingAnswer = customerAnswers.find((item) => item.questionId === questionId);
+
+        if (existingAnswer) {
+            // Nếu đã tồn tại câu hỏi trong mảng, cập nhật đáp án mới
+            existingAnswer.answerId = answerId;
+        } else {
+            // Nếu chưa tồn tại câu hỏi trong mảng, thêm câu hỏi và đáp án vào mảng
+            customerAnswers.push({ questionId, answerId });
+        }
     }
 
+    // Event handler khi khách hàng bấm submit
+    function onSubmitButtonClick() {
+        let score = 0;
+
+        customerAnswers.forEach((customerAnswer) => {
+            const { questionId, answerId } = customerAnswer;
+
+            const question = questions.find((q) => q.id === questionId);
+            if (question && question.answers) {
+                const correctAnswer = question.answers.find(
+                    (answer) => answer.id === answerId && answer.status === true
+                );
+                if (correctAnswer) {
+                    score += 1;
+                }
+            }
+        });
+
+        // Hiển thị số điểm của khách hàng
+        alert('Số điểm của bạn là: ' + score);
+        console.log(customerAnswers);
+        console.log(correctAnswers);
+
+        const currentDate = new Date().toISOString().split('T')[0];
+        const userQuiz = {
+            score: score,
+            date: currentDate,
+            userId: idUser,
+            quizId: idQuiz
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: page.urls.getAllUserQuiz,
+            data: JSON.stringify(userQuiz),
+            contentType: 'application/json',
+            success: function (response) {
+                console.log('Đã ghi lại thông tin UserQuiz');
+            },
+            error: function (jqXHR) {
+                console.log('Lỗi khi ghi lại thông tin UserQuiz');
+            }
+        });
+    }
 
 
 
@@ -96,15 +202,12 @@
         page.commands.getAllBillDetailsByBillId();
     }
 
-    page.initializeControlEvent = () => {
-
-    }
+    page.initializeControlEvent = () => {}
 
     $(() => {
         page.loadData();
         page.initializeControlEvent();
     })
-
 </script>
 </body>
 </html>

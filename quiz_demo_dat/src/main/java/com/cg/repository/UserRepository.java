@@ -1,5 +1,6 @@
 package com.cg.repository;
 
+import com.cg.model.Quiz;
 import com.cg.model.User;
 import com.cg.model.dto.user.UserDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,5 +42,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Boolean existsByUsername(String username);
 
-
+//    Optional<User> findByUser(User user);
 }

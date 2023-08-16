@@ -11,7 +11,10 @@ class AppBase {
     static API_USER = this.API_SERVER + '/users'
 
     static API_QUIZ = this.API_SERVER + '/quiz'
-    static API_QUESTION = this.API_SERVER + 'question'
+
+    static API_USER_QUIZ = this.API_SERVER + '/userQuiz'
+
+    static API_QUESTION = this.API_SERVER + '/question'
 
 
 

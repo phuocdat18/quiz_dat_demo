@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <th:block th:replace="layout/header"/>
+</head>
+<body>
+<h1>Hellooooooo</h1>
+<div class="header_address" id="orderDetailBill">
+  <p><b>ID Quiz:</b> <span id="idQuiz" th:text="${idQuiz}"></span></p>
+</div>
+<div class="header_address" id="orderUser">
+  <p><b>ID User:</b> <span id="idUser" th:text="${idUser}"></span></p>
+</div>
+
+<table >
+  <div class="tf__invoice_body">
+    <div class="table-responsive">
+      <table class="table table-striped" id="tbBill">
+        <tbody>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="submit-button-container">
+    <button class="submit-button" onclick="page.commands.submitQuestion()">Nộp bài</button>
+  </div>
+</table>
+
+
+<th:block th:replace="layout/script"/>
+
+<script>
+  let x = [];
+  const page = {
+    urls: {
+      getAllQuiz: AppBase.API_QUIZ,
+      getAllQuestions: AppBase.API_QUESTION,
+      getAllUserQuiz: AppBase.API_USER_QUIZ,
+    },
+    elements: {},
+    commands: {},
+    dialogs: {
+      elements: {},
+      loadData: {},
+      commands: {}
+    },
+  }
+
+  page.elements.tbBill = $('#tbBill tbody')
+  page.elements.totalAmountBill = $('#totalAmount-bill')
+  page.elements.tfInvoiceHeader = $('.tf__invoice_header')
+  page.dialogs.elements.orderDetail = $('#orderDetail tbody')
+  page.elements.orderDetailBill = $('#orderDetailBill')
+  page.dialogs.elements.totalAmount = $('#totalAmount')
+  page.dialogs.elements.vat = $('#vat')
+  page.dialogs.elements.subTotalAmount = $('#subTotalAmount')
+
+  let user = new User();
+  let status = $('#statusOrder').text();
+  let idQuiz = $('#idQuiz').text();
+  console.log(idQuiz);
+  let idUser = $('#idUser').text();
+  console.log(idUser);
+
+  const API_QUESTIONS = 'http://localhost:8090/api/question'
+  let array = ["a", "b", "c", "d"];
+  let quizzes = [];
+  let index = 0;
+  let questions = [];
+
+  // Khởi tạo biến questions
+  page.commands.getAllBillDetailsByBillId = () => {
+    $.ajax({
+      type: 'GET',
+      url: API_QUESTIONS + '/' + idQuiz
+    })
+            .done((data) => {
+              questions = data.content;
+              // Cập nhật dữ liệu câu hỏi
+              console.log(questions);
+              $.each(questions, (index) => {
+                const str = page.commands.renderHistoryBill(questions[index]);
+                page.elements.tbBill.prepend(str);
+              });
+            })
+            .fail((jqXHR) => {
+              console.log("123123");
+              AppBase.SweetAlert.showErrorAlert(AppBase.AlertMessageVi.ERROR_404);
+            });
+  };
+
+  page.commands.renderHistoryBill = (obj) => {
+    let answersHtml = '';
+    obj.answers.forEach((answer) => {
+      if (obj.type === 'radio') {
+        answersHtml += `
+                    <label>
+                        <input type="radio" name="question_${obj.id}" value="${answer.id}" data-correct="${answer.status}"> ${answer.content}, ${answer.status}
+                    </label><br>
+                `;
+      } else if (obj.type === 'checkbox') {
+        answersHtml += `
+                    <label>
+                        <input type="checkbox" name="question_${obj.id}" value="${answer.id}" data-correct="${answer.status}"> ${answer.content}, ${answer.status}
+                    </label><br>
+                `;
+      }
+    });
+
+    return `
+            <tr id="tr_${obj.id}">
+                <td>
+                    <span>${obj.content}</span>
+                </td>
+                <td>
+                    ${answersHtml}
+                </td>
+            </tr>
+        `;
+  };
+
+  page.commands.submitQuestion = () => {
+    // Lấy tất cả các câu hỏi trong bảng
+    const questions = $('#tbBill tbody tr');
+
+    // Khởi tạo một biến để lưu trữ điểm
+    let score = 0;
+
+    // Duyệt qua từng câu hỏi để kiểm tra đáp án và tính điểm
+    questions.each(function () {
+      const questionId = $(this).attr('id').split('_')[1];
+
+      // Kiểm tra loại câu hỏi (radio hoặc checkbox)
+      const questionType = $(this).find('input[type="radio"]').length > 0 ? 'radio' : 'checkbox';
+
+      // Lấy câu trả lời đã chọn
+      const selectedAnswers = $(this).find(`input[type="${questionType}"]:checked`);
+
+      // Lấy giá trị của các câu trả lời đã chọn
+      const answerValues = [];
+      selectedAnswers.each(function () {
+        answerValues.push($(this).val());
+      });
+
+      // Lấy các đáp án đúng cho câu hỏi từ mảng questions
+      const currentQuestion = questions.filter(`#tr_${questionId}`);
+      const correctAnswers = currentQuestion.find(`input[type="${questionType}"][value][data-correct="true"]`).map(function () {
+        return $(this).val();
+      }).get();
+
+      // Kiểm tra đáp án và tăng diểm nếu đúng
+      if (arrayEquals(answerValues, correctAnswers) && correctAnswers.includes("true")) {
+        score += 1;
+      }
+    });
+
+    // Hiển thị số điểm của khách hàng
+    alert('Số điểm của bạn là: ' + score);
+  };
+
+  // Hàm kiểm tra hai mảng có giống nhau hay không
+  function arrayEquals(a, b) {
+    return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((val, index) => val === b[index]);
+  }
+
+  page.loadData = () => {
+    page.commands.getAllBillDetailsByBillId();
+  }
+
+  page.initializeControlEvent = () => {}
+
+  $(() => {
+    page.loadData();
+    page.initializeControlEvent();
+  })
+</script>
+</body>
+</html>
